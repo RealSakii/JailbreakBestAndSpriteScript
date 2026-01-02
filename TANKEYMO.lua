@@ -1,3 +1,14 @@
+-- 🔑 KEY ที่ถูกต้อง
+local CorrectKey = "TANKEYMO"--Key
+
+-- 🧠 รับ key จากผู้ใช้
+getgenv().Key = getgenv().Key or ""
+
+if getgenv().Key ~= CorrectKey then
+	game.Players.LocalPlayer:Kick("❌ Key ไม่ถูกต้อง")
+	return
+end
+
 local stgui = game:GetService("StarterGui")
 if not getgenv().DisableNotification then
 	stgui:SetCore("SendNotification", {
@@ -396,6 +407,7 @@ UserInputService.InputBegan:Connect(function(input, gp)
 		update(5)
 	end
 end)
+
 
 
 
