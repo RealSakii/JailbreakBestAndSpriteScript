@@ -2,7 +2,7 @@ local stgui = game:GetService("StarterGui")
 if not getgenv().DisableNotification then
 	stgui:SetCore("SendNotification", {
 		Title = "Sprite&Best",
-		Icon = "rbxassetid://133256475976305",
+		Icon = "rbxassetid://122816576385645",
 		Text = "Jailbreak",
 		Duration = 10,
 		Button1 = "Dismiss",
@@ -120,7 +120,7 @@ local MAX_DISTANCE = 250
 local SMOOTHNESS = 1
 local AIM_PART = "HumanoidRootPart"
 
-local FOV_ENABLED = true -- 🔵 เปิด = aimbot ทำงาน
+local FOV_ENABLED = false -- 🔵 เปิด = aimbot ทำงาน
 
 -- FOV Circle
 local FOV = Drawing.new("Circle")
@@ -190,6 +190,7 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 end)
+
 
 
 
