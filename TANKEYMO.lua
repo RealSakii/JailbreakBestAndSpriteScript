@@ -359,7 +359,7 @@ gui.Parent = player:WaitForChild("PlayerGui")
 
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 300, 0, 250)
-frame.Position = UDim2.new(0, 0, 0, 0)
+frame.Position = UDim2.new(0.5, -150, 0.5, -85)
 frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 frame.Active = true
 frame.Visible = true
@@ -458,6 +458,7 @@ end)
 		Button.Text = "🔑 ยืนยัน KEY"
 	end
 end)
+
 
 
 
