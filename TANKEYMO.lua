@@ -320,7 +320,7 @@ local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 40)
 title.BackgroundTransparency = 1
 title.Text = "KEYMO HUB"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextColor3 = Color3.fromRGB(50, 170, 80)
 title.Font = Enum.Font.GothamBold
 title.TextScaled = true
 title.Parent = frame
@@ -396,6 +396,7 @@ UserInputService.InputBegan:Connect(function(input, gp)
 		update(5)
 	end
 end)
+
 
 
 
