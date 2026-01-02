@@ -117,7 +117,7 @@ local Mouse = LocalPlayer:GetMouse()
 local AIM_KEY = Enum.UserInputType.MouseButton2
 local FOV_RADIUS = 500
 local MAX_DISTANCE = 250
-local SMOOTHNESS = 2
+local SMOOTHNESS = 1.5
 local AIM_PART = "HumanoidRootPart"
 
 local FOV_ENABLED = false -- 🔵 เปิด = aimbot ทำงาน
@@ -307,5 +307,6 @@ UserInputService.InputBegan:Connect(function(input, gp)
 		update(4)
 	end
 end)
+
 
 
