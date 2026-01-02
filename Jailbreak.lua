@@ -191,6 +191,108 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
+--ESP Players
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local ESP_ENABLED = false -- เปิด ESP ตั้งแต่เริ่ม
+local ESPs = {}
+
+-- Toggle ESP ด้วยปุ่ม P
+UserInputService.InputBegan:Connect(function(input, gp)
+	if gp then return end
+	if input.KeyCode == Enum.KeyCode.P then
+		ESP_ENABLED = not ESP_ENABLED
+		for _, gui in pairs(ESPs) do
+			if gui then
+				gui.Enabled = ESP_ENABLED
+			end
+		end
+	end
+end)
+
+-- ฟังก์ชันเพิ่ม ESP ให้ผู้เล่น
+local function addESP(player)
+	if player == LocalPlayer then return end
+
+	local function onCharacter(char)
+		local hrp = char:WaitForChild("HumanoidRootPart", 5)
+		if not hrp then return end
+
+		-- ลบ ESP เก่า
+		if ESPs[player] then
+			if ESPs[player].Connection then
+				ESPs[player].Connection:Disconnect()
+			end
+			ESPs[player]:Destroy()
+		end
+
+		local gui = Instance.new("BillboardGui")
+		gui.Name = "ESP"
+		gui.Adornee = hrp
+		gui.Size = UDim2.fromOffset(200, 50)
+		gui.StudsOffset = Vector3.new(0, 3, 0)
+		gui.AlwaysOnTop = true -- เห็นผ่านวัตถุ
+		gui.Enabled = ESP_ENABLED
+		gui.Parent = hrp
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.fromScale(1, 1)
+		label.BackgroundTransparency = 1
+		label.TextStrokeTransparency = 0
+		label.Font = Enum.Font.SourceSansBold
+		label.TextScaled = true
+		label.Parent = gui
+
+		-- อัปเดต ESP ทุกเฟรม
+		local conn
+		conn = RunService.RenderStepped:Connect(function()
+			if not gui or not gui.Parent then
+				conn:Disconnect()
+				return
+			end
+			if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+
+			local dist = (LocalPlayer.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+
+			-- สี ESP ตามทีม (ถ้ามี Teams)
+			local color = Color3.fromRGB(255, 50, 50) -- Default แดง
+			if player.Team == LocalPlayer.Team then
+				color = Color3.fromRGB(50, 255, 50) -- เขียวเพื่อนร่วมทีม
+			end
+
+			label.TextColor3 = color
+			label.Text = player.Name .. " | " .. math.floor(dist) .. "m"
+		end)
+
+		ESPs[player] = gui
+		ESPs[player].Connection = conn
+	end
+
+	if player.Character then
+		onCharacter(player.Character)
+	end
+	player.CharacterAdded:Connect(onCharacter)
+end
+
+-- เพิ่ม ESP ให้ผู้เล่นทุกคน
+for _, plr in pairs(Players:GetPlayers()) do
+	addESP(plr)
+end
+
+Players.PlayerAdded:Connect(addESP)
+Players.PlayerRemoving:Connect(function(plr)
+	if ESPs[plr] then
+		if ESPs[plr].Connection then
+			ESPs[plr].Connection:Disconnect()
+		end
+		ESPs[plr]:Destroy()
+		ESPs[plr] = nil
+	end
+end)
 
 
 
@@ -316,6 +418,7 @@ UserInputService.InputBegan:Connect(function(input, gp)
 		update(5)
 	end
 end)
+
 
 
 
