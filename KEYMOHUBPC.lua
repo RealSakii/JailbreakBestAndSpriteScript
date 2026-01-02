@@ -311,7 +311,7 @@ end
 -- กด Y
 UIS.InputBegan:Connect(function(input, gp)
     if gp then return end
-    if input.KeyCode == Enum.KeyCode.Y then
+    if input.KeyCode == Enum.KeyCode.H then
         if attached then
             detach()
         else
@@ -345,7 +345,7 @@ local keyNames = {
 	[2] = "กระโดดสูง(B)",
 	[3] = "วาร์ป(T)",
 	[4] = "Lock On(M3)",
-	[5] = "Attach Follow(Y)"
+	[5] = "Attach Follow(H)"
 }
 
 -- สถานะ
@@ -444,7 +444,7 @@ UserInputService.InputBegan:Connect(function(input, gp)
 		states[4] = not states[4]
 		update(4)
 
-	elseif input.KeyCode == Enum.KeyCode.Y then
+	elseif input.KeyCode == Enum.KeyCode.H then
 		states[5] = not states[5]
 		update(5)
 	end
@@ -458,6 +458,7 @@ end)
 		Button.Text = "🔑 ยืนยัน KEY"
 	end
 end)
+
 
 
 
