@@ -313,7 +313,7 @@ local keyNames = {
 	[1] = "วิ่งไว",
 	[2] = "กระโดดสูง",
 	[3] = "วาร์ป",
-	[4] = "Lock On"
+	[4] = "Lock On",
 	[5] = "ESP Players"
 }
 
@@ -418,6 +418,7 @@ UserInputService.InputBegan:Connect(function(input, gp)
 		update(5)
 	end
 end)
+
 
 
 
