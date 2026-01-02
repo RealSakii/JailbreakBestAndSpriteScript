@@ -191,6 +191,87 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
+--ESP Players
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+local ESP_ENABLED = true
+local ESP_LIST = {}
+
+-- สร้าง ESP
+local function createESP(character, player)
+	if player == LocalPlayer then return end
+	if not character:FindFirstChild("Head") then return end
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "ESP"
+	billboard.Size = UDim2.new(0, 220, 0, 50)
+	billboard.StudsOffset = Vector3.new(0, 3, 0)
+	billboard.AlwaysOnTop = true
+	billboard.MaxDistance = math.huge
+	billboard.Enabled = ESP_ENABLED
+	billboard.Parent = character.Head
+
+	local text = Instance.new("TextLabel")
+	text.Size = UDim2.new(1, 0, 1, 0)
+	text.BackgroundTransparency = 1
+	text.TextColor3 = Color3.fromRGB(255, 50, 50)
+	text.TextStrokeTransparency = 0
+	text.TextScaled = true
+	text.Font = Enum.Font.SourceSansBold
+	text.Parent = billboard
+
+	ESP_LIST[player] = billboard
+
+	RunService.RenderStepped:Connect(function()
+		if not billboard or not billboard.Parent then return end
+
+		local myChar = LocalPlayer.Character
+		if myChar and myChar:FindFirstChild("HumanoidRootPart")
+		and character:FindFirstChild("HumanoidRootPart") then
+
+			local dist = (myChar.HumanoidRootPart.Position -
+				character.HumanoidRootPart.Position).Magnitude
+
+			text.Text = player.Name .. " | " .. math.floor(dist) ..
+		end
+	end)
+end
+
+-- ผู้เล่นที่มีอยู่
+for _, player in pairs(Players:GetPlayers()) do
+	if player.Character then
+		createESP(player.Character, player)
+	end
+	player.CharacterAdded:Connect(function(char)
+		task.wait(1)
+		createESP(char, player)
+	end)
+end
+
+-- ผู้เล่นใหม่
+Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function(char)
+		task.wait(1)
+		createESP(char, player)
+	end)
+end)
+
+-- 🎹 ปุ่มเปิด / ปิด (RightShift)
+UserInputService.InputBegan:Connect(function(input, gp)
+	if gp then return end
+	if input.KeyCode == Enum.KeyCode.RightShift then
+		ESP_ENABLED = not ESP_ENABLED
+
+		for _, esp in pairs(ESP_LIST) do
+			if esp then
+				esp.Enabled = ESP_ENABLED
+			end
+		end
+	end
+end)
 
 
 -------------------------------------------------------------------------
@@ -208,6 +289,7 @@ local keyNames = {
 	[2] = "กระโดดสูง",
 	[3] = "วาร์ป",
 	[4] = "Lock On"
+	[5] = "ESP Players"
 }
 
 -- สถานะ
@@ -220,7 +302,7 @@ gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 230)
+frame.Size = UDim2.new(0, 300, 0, 250)
 frame.Position = UDim2.new(0.4, 0, 0.35, 0)
 frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 frame.Active = true
@@ -305,8 +387,13 @@ UserInputService.InputBegan:Connect(function(input, gp)
 	elseif input.UserInputType == Enum.UserInputType.MouseButton3 then
 		states[4] = not states[4]
 		update(4)
+
+	elseif nput.KeyCode == Enum.KeyCode.RightShift then
+		states[5] = not states[5]
+		update(5)
 	end
 end)
+
 
 
 
