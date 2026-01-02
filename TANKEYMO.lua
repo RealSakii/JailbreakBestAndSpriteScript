@@ -367,7 +367,7 @@ UserInputService.InputBegan:Connect(function(input, gp)
 	if gp then return end
 
 -- Toggle GUI
-	if input.KeyCode == Enum.KeyCode.RightControl then
+	if input.KeyCode == Enum.KeyCode.LeftControl then
 		toggleGUI()
 	end
 
@@ -396,6 +396,7 @@ UserInputService.InputBegan:Connect(function(input, gp)
 		update(5)
 	end
 end)
+
 
 
 
