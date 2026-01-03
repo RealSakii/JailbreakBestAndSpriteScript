@@ -54,19 +54,14 @@ UICorner.CornerRadius = UDim.new(0, 12)
 UICorner.Parent = Frame
 
 -- 🔵 โลโก้ KEYMOHUB (ImageLabel)
-local TitleImage = Instance.new("ImageLabel")
-TitleImage.Parent = Frame
-TitleImage.Name = "KEYMOHUB_LOGO"
-TitleImage.Size = UDim2.new(1, -20, 0, 50)
-TitleImage.Position = UDim2.new(0, 10, 0, 10)
-
--- ⚠️ ใส่ Image ID ของคุณตรงนี้
-TitleImage.Image = "rbxassetid://109159489030155" -- ใช้อันนี้ทดสอบ ต้องขึ้นแน่นอน
-
-TitleImage.BackgroundTransparency = 1
-TitleImage.ScaleType = Enum.ScaleType.Fit
-TitleImage.ZIndex = 5
-
+local Title = Instance.new("TextLabel")
+Title.Parent = Frame
+Title.Size = UDim2.new(1,0,0,40)
+Title.Text = "KEYMO HUB"
+Title.TextColor3 = Color3.new(0,170,255)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 18
 -- labels
 local labels = {}
 
@@ -140,6 +135,7 @@ UserInputService.InputBegan:Connect(function(input, gp)
 end)
 
 ----
+
 
 
 
