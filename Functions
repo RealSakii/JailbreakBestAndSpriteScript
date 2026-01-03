@@ -711,6 +711,231 @@ RunService.RenderStepped:Connect(function()
 	bg.CFrame = camCF
 end)
 
+--// FlingScriptSafe
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+
+local LP = Players.LocalPlayer
+local FLING_POWER = 10000
+local FLING_TIME = 1
+
+--// STATE
+local selectedTarget = nil
+local oldCFrame
+local flingConn
+local noclipConn
+
+--// UTILS
+local function getChar(plr)
+    return plr.Character or plr.CharacterAdded:Wait()
+end
+
+--// NOCLIP
+local function enableNoClip()
+    noclipConn = RunService.Stepped:Connect(function()
+        local char = LP.Character
+        if not char then return end
+        for _,v in ipairs(char:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.CanCollide = false
+            end
+        end
+    end)
+end
+
+local function disableNoClip()
+    if noclipConn then noclipConn:Disconnect() noclipConn = nil end
+    local char = LP.Character
+    if not char then return end
+    for _,v in ipairs(char:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v.CanCollide = true
+        end
+    end
+end
+
+--// STOP
+local function stopFling()
+    if flingConn then flingConn:Disconnect() flingConn = nil end
+    disableNoClip()
+    local char = LP.Character
+    if char and oldCFrame then
+        char:PivotTo(oldCFrame)
+        char.Humanoid.PlatformStand = false
+    end
+end
+
+--// FLING LOGIC (PLAYER + NPC)
+local function flingTarget(targetHRP)
+    stopFling()
+
+    local char = getChar(LP)
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    local hum = char:WaitForChild("Humanoid")
+
+    oldCFrame = hrp.CFrame
+    hum.PlatformStand = true
+    enableNoClip()
+
+    local bv = Instance.new("BodyVelocity")
+    bv.MaxForce = Vector3.new(1e9,1e9,1e9)
+    bv.Parent = hrp
+
+    flingConn = RunService.Heartbeat:Connect(function()
+        if not targetHRP or not targetHRP.Parent then
+            stopFling()
+            bv:Destroy()
+            return
+        end
+
+        hrp.CFrame = targetHRP.CFrame * CFrame.new(0,0,-1)
+        bv.Velocity = targetHRP.CFrame.LookVector * FLING_POWER
+    end)
+
+    task.delay(FLING_TIME, function()
+        stopFling()
+        bv:Destroy()
+    end)
+end
+
+--// GUI
+local gui = Instance.new("ScreenGui", LP.PlayerGui)
+gui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0,300,0,420)
+frame.Position = UDim2.new(0,50,0.25,0)
+frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+frame.Visible = false
+Instance.new("UICorner", frame)
+
+--// TITLE
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1,0,0,40)
+title.Text = "SAFE FLING"
+title.TextColor3 = Color3.fromRGB(0,170,255)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+
+--// LIST
+local list = Instance.new("ScrollingFrame", frame)
+list.Size = UDim2.new(1,-20,0,300)
+list.Position = UDim2.new(0,10,0,45)
+list.AutomaticCanvasSize = Enum.AutomaticSize.Y
+list.ScrollBarThickness = 6
+list.BackgroundTransparency = 1
+Instance.new("UIListLayout", list)
+
+--// BUTTON MAKER
+local function makeBtn(text)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1,-8,0,30)
+    b.Text = text
+    b.BackgroundColor3 = Color3.fromRGB(15,15,15)
+    b.TextColor3 = Color3.new(1,1,1)
+    b.Font = Enum.Font.Gotham
+    b.TextSize = 14
+    Instance.new("UICorner", b)
+    return b
+end
+
+--// REFRESH TARGET LIST (PLAYER + NPC)
+local function refreshList()
+    for _,v in ipairs(list:GetChildren()) do
+        if v:IsA("TextButton") then v:Destroy() end
+    end
+
+    -- Players
+    for _,plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LP and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local b = makeBtn("[ผู้เล่น] "..plr.Name)
+            b.Parent = list
+            b.MouseButton1Click:Connect(function()
+                selectedTarget = plr.Character.HumanoidRootPart
+            end)
+        end
+    end
+
+    -- NPC / Monster
+    for _,m in ipairs(workspace:GetDescendants()) do
+        if m:IsA("Model") and not Players:GetPlayerFromCharacter(m) then
+            if m:FindFirstChild("Humanoid") and m:FindFirstChild("HumanoidRootPart") then
+                local b = makeBtn("[NPC] "..m.Name)
+                b.Parent = list
+                b.MouseButton1Click:Connect(function()
+                    selectedTarget = m.HumanoidRootPart
+                end)
+            end
+        end
+    end
+end
+
+-- AUTO UPDATE
+task.spawn(function()
+    while true do
+        refreshList()
+        task.wait(2)
+    end
+end)
+
+--// FLING BUTTON (KEYMO BLUE)
+local flingBtn = Instance.new("TextButton", frame)
+flingBtn.Size = UDim2.new(1,-20,0,36)
+flingBtn.Position = UDim2.new(0,10,1,-46)
+flingBtn.Text = "FLING TARGET"
+flingBtn.BackgroundColor3 = Color3.fromRGB(0,170,255)
+flingBtn.TextColor3 = Color3.new(1,1,1)
+flingBtn.Font = Enum.Font.GothamBold
+flingBtn.TextSize = 15
+Instance.new("UICorner", flingBtn)
+
+flingBtn.MouseButton1Click:Connect(function()
+    if selectedTarget then
+        flingTarget(selectedTarget)
+    end
+end)
+
+--// TOGGLE GUI (G)
+UIS.InputBegan:Connect(function(i,gp)
+    if not gp and i.KeyCode == Enum.KeyCode.G then
+        frame.Visible = not frame.Visible
+    end
+end)
+
+--// DRAG GUI
+do
+    local dragging, dragStart, startPos
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+end
+
+
 
 
 
