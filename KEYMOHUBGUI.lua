@@ -1,14 +1,3 @@
-if not getgenv().DisableNotification then
-	stgui:SetCore("SendNotification", {
-		Title = "KEYMOHUB",
-		Icon = "rbxassetid://109159489030155",
-		Text = "KEYMOHUB",
-		Duration = 10,
-		Button1 = "Dismiss",
-		Callback = function() end
-	})
-end
-
 ----
 --Guiเเสดงสถานะ
 local Players = game:GetService("Players")
@@ -147,6 +136,16 @@ end)
 
 ----
 
+if not getgenv().DisableNotification then
+	stgui:SetCore("SendNotification", {
+		Title = "KEYMOHUB",
+		Icon = "rbxassetid://109159489030155",
+		Text = "KEYMOHUB",
+		Duration = 10,
+		Button1 = "Dismiss",
+		Callback = function() end
+	})
+end
 
 
 
