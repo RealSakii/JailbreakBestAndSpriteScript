@@ -364,10 +364,12 @@ local attached = false
 local target = nil
 local selectedPlayer = nil
 
-local flyConn
-local attachConn
-local noclipConn
+local flyConn, attachConn, noclipConn
 local bv, bg
+
+--// ATTACH SETTINGS
+local attachDir = Vector3.new(0,1,0) -- บน
+local attachDist = 3
 
 --// UTILS
 local function getChar(plr)
@@ -380,7 +382,7 @@ local function enableNoClip()
     noclipConn = RunService.Stepped:Connect(function()
         local char = LP.Character
         if not char then return end
-        for _, v in ipairs(char:GetDescendants()) do
+        for _,v in ipairs(char:GetDescendants()) do
             if v:IsA("BasePart") then
                 v.CanCollide = false
             end
@@ -392,7 +394,7 @@ local function disableNoClip()
     if noclipConn then noclipConn:Disconnect() noclipConn = nil end
     local char = LP.Character
     if not char then return end
-    for _, v in ipairs(char:GetDescendants()) do
+    for _,v in ipairs(char:GetDescendants()) do
         if v:IsA("BasePart") then
             v.CanCollide = true
         end
@@ -422,8 +424,8 @@ local function attachTo(plr)
     local char = getChar(LP)
     local hrp = char.HumanoidRootPart
     local hum = char.Humanoid
-
     hum.PlatformStand = true
+
     attached = true
     target = plr
 
@@ -431,7 +433,8 @@ local function attachTo(plr)
         if not target.Character then return end
         local tHRP = target.Character:FindFirstChild("HumanoidRootPart")
         if tHRP then
-            hrp.CFrame = tHRP.CFrame * CFrame.new(0, 3, 0)
+            local offset = attachDir * attachDist
+            hrp.CFrame = tHRP.CFrame * CFrame.new(offset)
             hrp.Velocity = Vector3.zero
         end
     end)
@@ -444,15 +447,14 @@ local function flyTo(plr)
     local char = getChar(LP)
     local hrp = char.HumanoidRootPart
     local hum = char.Humanoid
-
     hum.PlatformStand = true
     enableNoClip()
 
     bv = Instance.new("BodyVelocity", hrp)
-    bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+    bv.MaxForce = Vector3.new(1e9,1e9,1e9)
 
     bg = Instance.new("BodyGyro", hrp)
-    bg.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+    bg.MaxTorque = Vector3.new(1e9,1e9,1e9)
     bg.P = 1e5
 
     flying = true
@@ -478,63 +480,81 @@ local gui = Instance.new("ScreenGui", LP.PlayerGui)
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 260, 0, 300)
-frame.Position = UDim2.new(0, 50, 0.3, 0)
-frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+frame.Size = UDim2.new(0,280,0,400)
+frame.Position = UDim2.new(0,40,0.25,0)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 frame.Visible = false
 Instance.new("UICorner", frame)
 
 --// PLAYER LIST
 local list = Instance.new("ScrollingFrame", frame)
-list.Size = UDim2.new(1, -20, 1, -80)
-list.Position = UDim2.new(0, 10, 0, 10)
-list.CanvasSize = UDim2.new(0,0,0,0)
-list.ScrollBarImageTransparency = 0.4
+list.Size = UDim2.new(1,-20,0,180)
+list.Position = UDim2.new(0,10,0,10)
 list.AutomaticCanvasSize = Enum.AutomaticSize.Y
+list.ScrollingDirection = Enum.ScrollingDirection.Y
+list.ScrollBarThickness = 6
+list.Active = true
+list.BackgroundTransparency = 1
 
 local layout = Instance.new("UIListLayout", list)
 layout.Padding = UDim.new(0,6)
 
---// BUTTONS
-local flyBtn = Instance.new("TextButton", frame)
-flyBtn.Size = UDim2.new(1, -20, 0, 30)
-flyBtn.Position = UDim2.new(0, 10, 1, -60)
-flyBtn.Text = "บินไปหาที่เลือก"
-flyBtn.BackgroundColor3 = Color3.fromRGB(0,170,255)
-flyBtn.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner", flyBtn)
+--// BUTTON CREATOR
+local function makeBtn(parent,text,size,pos,color)
+    local b = Instance.new("TextButton", parent)
+    b.Size = size
+    b.Position = pos
+    b.Text = text
+    b.BackgroundColor3 = color
+    b.TextColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", b)
+    return b
+end
 
-local stopBtn = Instance.new("TextButton", frame)
-stopBtn.Size = UDim2.new(1, -20, 0, 25)
-stopBtn.Position = UDim2.new(0, 10, 1, -30)
-stopBtn.Text = "หยุด"
-stopBtn.BackgroundColor3 = Color3.fromRGB(200,60,60)
-stopBtn.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner", stopBtn)
+--// CONTROL BUTTONS
+local flyBtn = makeBtn(frame,"บินไปหา",UDim2.new(1,-20,0,30),UDim2.new(0,10,0,200),Color3.fromRGB(0,170,255))
+local stopBtn = makeBtn(frame,"หยุด / ปล่อย",UDim2.new(1,-20,0,26),UDim2.new(0,10,0,235),Color3.fromRGB(200,60,60))
 
---// CREATE PLAYER BUTTON
+--// ATTACH MODE LABEL
+local lbl = Instance.new("TextLabel", frame)
+lbl.Size = UDim2.new(1,-20,0,20)
+lbl.Position = UDim2.new(0,10,0,270)
+lbl.Text = "ตำแหน่งการเกาะ"
+lbl.TextColor3 = Color3.new(1,1,1)
+lbl.BackgroundTransparency = 1
+
+--// ATTACH BUTTONS
+makeBtn(frame,"บน",UDim2.new(0.48,0,0,26),UDim2.new(0,10,0,295),Color3.fromRGB(15,15,15))
+    .MouseButton1Click:Connect(function() attachDir = Vector3.new(0,1,0) end)
+
+makeBtn(frame,"หน้า",UDim2.new(0.48,0,0,26),UDim2.new(0.45,10,0,295),Color3.fromRGB(15,15,15))
+    .MouseButton1Click:Connect(function() attachDir = Vector3.new(0,0,-1) end)
+
+makeBtn(frame,"หลัง",UDim2.new(0.48,0,0,26),UDim2.new(0,10,0,325),Color3.fromRGB(15,15,15))
+    .MouseButton1Click:Connect(function() attachDir = Vector3.new(0,0,1) end)
+
+makeBtn(frame,"ล่าง",UDim2.new(0.48,0,0,26),UDim2.new(0.45,10,0,325),Color3.fromRGB(15,15,15))
+    .MouseButton1Click:Connect(function() attachDir = Vector3.new(0,-1,0) end)
+
+--// DISTANCE BUTTON
+local distBtn = makeBtn(frame,"ระยะเกาะ : 3",UDim2.new(1,-20,0,26),UDim2.new(0,10,0,360),Color3.fromRGB(0,170,255))
+distBtn.MouseButton1Click:Connect(function()
+    attachDist += 1
+    if attachDist > 10 then attachDist = 1 end
+    distBtn.Text = "ระยะเกาะ : "..attachDist
+end)
+
+--// PLAYER LIST UPDATE
 local function refreshList()
-    for _,v in pairs(list:GetChildren()) do
+    for _,v in ipairs(list:GetChildren()) do
         if v:IsA("TextButton") then v:Destroy() end
     end
 
     for _,plr in ipairs(Players:GetPlayers()) do
         if plr ~= LP then
-            local btn = Instance.new("TextButton", list)
-            btn.Size = UDim2.new(1, -10, 0, 30)
-            btn.Text = plr.Name
-            btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
-            btn.TextColor3 = Color3.new(1,1,1)
-            Instance.new("UICorner", btn)
-
-            btn.MouseButton1Click:Connect(function()
+            local b = makeBtn(list,plr.Name,UDim2.new(1,-10,0,30),UDim2.new(),Color3.fromRGB(15,15,15))
+            b.MouseButton1Click:Connect(function()
                 selectedPlayer = plr
-                for _,b in pairs(list:GetChildren()) do
-                    if b:IsA("TextButton") then
-                        b.BackgroundColor3 = Color3.fromRGB(40,40,40)
-                    end
-                end
-                btn.BackgroundColor3 = Color3.fromRGB(0,170,255)
             end)
         end
     end
@@ -544,11 +564,9 @@ refreshList()
 Players.PlayerAdded:Connect(refreshList)
 Players.PlayerRemoving:Connect(refreshList)
 
---// BUTTON EVENTS
+--// EVENTS
 flyBtn.MouseButton1Click:Connect(function()
-    if selectedPlayer then
-        flyTo(selectedPlayer)
-    end
+    if selectedPlayer then flyTo(selectedPlayer) end
 end)
 
 stopBtn.MouseButton1Click:Connect(stopAll)
@@ -559,6 +577,39 @@ UIS.InputBegan:Connect(function(i,gp)
         frame.Visible = not frame.Visible
     end
 end)
+
+--// DRAG FRAME (คลิกซ้ายลาก)
+do
+    local dragging = false
+    local dragStart
+    local startPos
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
 
 --Flying
 local Players = game:GetService("Players")
@@ -659,6 +710,7 @@ RunService.RenderStepped:Connect(function()
 	bv.Velocity = direction
 	bg.CFrame = camCF
 end)
+
 
 
 
