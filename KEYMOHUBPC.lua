@@ -278,7 +278,7 @@ local guiVisible = false
 
 UIS.InputBegan:Connect(function(input, gpe)
     if gpe then return end
-    if input.KeyCode == Enum.KeyCode.X then
+    if input.KeyCode == Enum.KeyCode.RightControl then
         guiVisible = not guiVisible
         gui.Enabled = guiVisible
     end
@@ -615,6 +615,7 @@ end)
 		Button.Text = "🔑 ยืนยัน KEY"
 	end
 end)
+
 
 
 
