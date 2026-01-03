@@ -62,7 +62,7 @@ TextBox.Size = UDim2.new(1,-40,0,35)
 TextBox.Position = UDim2.new(0,20,0,60)
 TextBox.PlaceholderText = "ใส่ Key ที่นี่"
 TextBox.Text = ""
-TextBox.Font = Enum.Font.Gotham
+TextBox.Font = Enum.Font.GothamBold
 TextBox.TextSize = 14
 TextBox.BackgroundColor3 = Color3.fromRGB(45,45,45)
 TextBox.TextColor3 = Color3.new(1,1,1)
@@ -538,6 +538,7 @@ if not getgenv().DisableNotification then
 		Callback = function() end
 	})
 end
+
 
 
 
