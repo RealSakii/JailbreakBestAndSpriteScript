@@ -275,7 +275,7 @@ local Mouse = LocalPlayer:GetMouse()
 local AIM_KEY = Enum.UserInputType.MouseButton2
 local FOV_RADIUS = 500
 local MAX_DISTANCE = 850
-local SMOOTHNESS = 2
+local SMOOTHNESS = 1.5
 local AIM_PART = "HumanoidRootPart"
 
 local FOV_ENABLED = false -- 🔵 เปิด = aimbot ทำงาน
@@ -362,11 +362,11 @@ local SPEED = 150
 local flying = false
 local attached = false
 local target = nil
+local selectedPlayer = nil
 
 local flyConn
 local attachConn
 local noclipConn
-
 local bv, bg
 
 --// UTILS
@@ -377,7 +377,6 @@ end
 --// NOCLIP
 local function enableNoClip()
     if noclipConn then noclipConn:Disconnect() end
-
     noclipConn = RunService.Stepped:Connect(function()
         local char = LP.Character
         if not char then return end
@@ -390,11 +389,7 @@ local function enableNoClip()
 end
 
 local function disableNoClip()
-    if noclipConn then
-        noclipConn:Disconnect()
-        noclipConn = nil
-    end
-
+    if noclipConn then noclipConn:Disconnect() noclipConn = nil end
     local char = LP.Character
     if not char then return end
     for _, v in ipairs(char:GetDescendants()) do
@@ -404,21 +399,19 @@ local function disableNoClip()
     end
 end
 
---// STOP ALL
+--// STOP
 local function stopAll()
     flying = false
     attached = false
     target = nil
 
-    if flyConn then flyConn:Disconnect() flyConn = nil end
-    if attachConn then attachConn:Disconnect() attachConn = nil end
-    if bv then bv:Destroy() bv = nil end
-    if bg then bg:Destroy() bg = nil end
+    if flyConn then flyConn:Disconnect() end
+    if attachConn then attachConn:Disconnect() end
+    if bv then bv:Destroy() end
+    if bg then bg:Destroy() end
 
-    local char = getChar(LP)
-    local hum = char:WaitForChild("Humanoid")
+    local hum = getChar(LP):WaitForChild("Humanoid")
     hum.PlatformStand = false
-
     disableNoClip()
 end
 
@@ -426,23 +419,21 @@ end
 local function attachTo(plr)
     stopAll()
 
-    local myChar = getChar(LP)
-    local myHRP = myChar:WaitForChild("HumanoidRootPart")
-    local hum = myChar:WaitForChild("Humanoid")
+    local char = getChar(LP)
+    local hrp = char.HumanoidRootPart
+    local hum = char.Humanoid
 
     hum.PlatformStand = true
-    disableNoClip()
-
-    target = plr
     attached = true
+    target = plr
 
     attachConn = RunService.Heartbeat:Connect(function()
-        if not attached or not target.Character then return end
+        if not target.Character then return end
         local tHRP = target.Character:FindFirstChild("HumanoidRootPart")
-        if not tHRP then return end
-
-        myHRP.CFrame = tHRP.CFrame * CFrame.new(0, 3, 0)
-        myHRP.Velocity = Vector3.zero
+        if tHRP then
+            hrp.CFrame = tHRP.CFrame * CFrame.new(0, 3, 0)
+            hrp.Velocity = Vector3.zero
+        end
     end)
 end
 
@@ -450,17 +441,17 @@ end
 local function flyTo(plr)
     stopAll()
 
-    local myChar = getChar(LP)
-    local myHRP = myChar:WaitForChild("HumanoidRootPart")
-    local hum = myChar:WaitForChild("Humanoid")
+    local char = getChar(LP)
+    local hrp = char.HumanoidRootPart
+    local hum = char.Humanoid
 
     hum.PlatformStand = true
     enableNoClip()
 
-    bv = Instance.new("BodyVelocity", myHRP)
+    bv = Instance.new("BodyVelocity", hrp)
     bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
 
-    bg = Instance.new("BodyGyro", myHRP)
+    bg = Instance.new("BodyGyro", hrp)
     bg.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
     bg.P = 1e5
 
@@ -468,118 +459,106 @@ local function flyTo(plr)
     target = plr
 
     flyConn = RunService.Heartbeat:Connect(function()
-        if not flying or not target.Character then return end
+        if not target.Character then return end
         local tHRP = target.Character:FindFirstChild("HumanoidRootPart")
         if not tHRP then return end
 
-        local dir = (tHRP.Position - myHRP.Position)
-        local dist = dir.Magnitude
-
-        bg.CFrame = CFrame.lookAt(myHRP.Position, tHRP.Position)
+        local dir = (tHRP.Position - hrp.Position)
+        bg.CFrame = CFrame.lookAt(hrp.Position, tHRP.Position)
         bv.Velocity = dir.Unit * SPEED
 
-        if dist < 5 then
+        if dir.Magnitude < 5 then
             attachTo(target)
         end
     end)
 end
 
 --// GUI
-local gui = Instance.new("ScreenGui")
-gui.Name = "FlyToPlayerGUI"
+local gui = Instance.new("ScreenGui", LP.PlayerGui)
 gui.ResetOnSpawn = false
-gui.Parent = LP:WaitForChild("PlayerGui")
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 230, 0, 140)
-frame.Position = UDim2.new(0,  1000, 0.4, 0)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-frame.BorderSizePixel = 0
+frame.Size = UDim2.new(0, 260, 0, 300)
+frame.Position = UDim2.new(0, 50, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
 frame.Visible = false
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", frame)
 
---// DRAG
-do
-    local dragging, dragInput, startPos, startFramePos
+--// PLAYER LIST
+local list = Instance.new("ScrollingFrame", frame)
+list.Size = UDim2.new(1, -20, 1, -80)
+list.Position = UDim2.new(0, 10, 0, 10)
+list.CanvasSize = UDim2.new(0,0,0,0)
+list.ScrollBarImageTransparency = 0.4
+list.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            startPos = input.Position
-            startFramePos = frame.Position
+local layout = Instance.new("UIListLayout", list)
+layout.Padding = UDim.new(0,6)
 
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-
-    frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-
-    UIS.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - startPos
-            frame.Position = UDim2.new(
-                startFramePos.X.Scale,
-                startFramePos.X.Offset + delta.X,
-                startFramePos.Y.Scale,
-                startFramePos.Y.Offset + delta.Y
-            )
-        end
-    end)
-end
-
-local box = Instance.new("TextBox", frame)
-box.Size = UDim2.new(1, -20, 0, 35)
-box.Position = UDim2.new(0, 10, 0, 10)
-box.Text = "ชื่อผู้เล่น"
-box.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-box.TextColor3 = Color3.new(1, 1, 1)
-box.ClearTextOnFocus = false
-Instance.new("UICorner", box)
-
+--// BUTTONS
 local flyBtn = Instance.new("TextButton", frame)
-flyBtn.Size = UDim2.new(1, -20, 0, 32)
-flyBtn.Position = UDim2.new(0, 10, 0, 55)
-flyBtn.Text = "บินไปหา"
-flyBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-flyBtn.TextColor3 = Color3.new(1, 1, 1)
+flyBtn.Size = UDim2.new(1, -20, 0, 30)
+flyBtn.Position = UDim2.new(0, 10, 1, -60)
+flyBtn.Text = "บินไปหาที่เลือก"
+flyBtn.BackgroundColor3 = Color3.fromRGB(0,170,255)
+flyBtn.TextColor3 = Color3.new(1,1,1)
 Instance.new("UICorner", flyBtn)
 
 local stopBtn = Instance.new("TextButton", frame)
-stopBtn.Size = UDim2.new(1, -20, 0, 28)
-stopBtn.Position = UDim2.new(0, 10, 0, 95)
-stopBtn.Text = "หยุด / ปล่อย"
-stopBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
-stopBtn.TextColor3 = Color3.new(1, 1, 1)
+stopBtn.Size = UDim2.new(1, -20, 0, 25)
+stopBtn.Position = UDim2.new(0, 10, 1, -30)
+stopBtn.Text = "หยุด"
+stopBtn.BackgroundColor3 = Color3.fromRGB(200,60,60)
+stopBtn.TextColor3 = Color3.new(1,1,1)
 Instance.new("UICorner", stopBtn)
+
+--// CREATE PLAYER BUTTON
+local function refreshList()
+    for _,v in pairs(list:GetChildren()) do
+        if v:IsA("TextButton") then v:Destroy() end
+    end
+
+    for _,plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LP then
+            local btn = Instance.new("TextButton", list)
+            btn.Size = UDim2.new(1, -10, 0, 30)
+            btn.Text = plr.Name
+            btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+            btn.TextColor3 = Color3.new(1,1,1)
+            Instance.new("UICorner", btn)
+
+            btn.MouseButton1Click:Connect(function()
+                selectedPlayer = plr
+                for _,b in pairs(list:GetChildren()) do
+                    if b:IsA("TextButton") then
+                        b.BackgroundColor3 = Color3.fromRGB(40,40,40)
+                    end
+                end
+                btn.BackgroundColor3 = Color3.fromRGB(0,170,255)
+            end)
+        end
+    end
+end
+
+refreshList()
+Players.PlayerAdded:Connect(refreshList)
+Players.PlayerRemoving:Connect(refreshList)
 
 --// BUTTON EVENTS
 flyBtn.MouseButton1Click:Connect(function()
-    local plr = Players:FindFirstChild(box.Text)
-    if plr and plr ~= LP then
-        flyTo(plr)
+    if selectedPlayer then
+        flyTo(selectedPlayer)
     end
 end)
 
-stopBtn.MouseButton1Click:Connect(function()
-    stopAll()
-end)
+stopBtn.MouseButton1Click:Connect(stopAll)
 
 --// TOGGLE GUI (H)
-UIS.InputBegan:Connect(function(input, gp)
-    if gp then return end
-    if input.KeyCode == Enum.KeyCode.H then
+UIS.InputBegan:Connect(function(i,gp)
+    if not gp and i.KeyCode == Enum.KeyCode.H then
         frame.Visible = not frame.Visible
     end
 end)
-
 
 --Flying
 local Players = game:GetService("Players")
@@ -680,6 +659,7 @@ RunService.RenderStepped:Connect(function()
 	bv.Velocity = direction
 	bg.CFrame = camCF
 end)
+
 
 
 
