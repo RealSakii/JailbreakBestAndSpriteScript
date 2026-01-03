@@ -1,3 +1,14 @@
+if not getgenv().DisableNotification then
+	stgui:SetCore("SendNotification", {
+		Title = "KEYMOHUB",
+		Icon = "rbxassetid://109159489030155",
+		Text = "KEYMOHUB",
+		Duration = 10,
+		Button1 = "Dismiss",
+		Callback = function() end
+	})
+end
+
 -- 🔑 KEY ที่ถูกต้อง
 local CorrectKey = "tankeymo"
 
@@ -508,6 +519,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/RealSakii/BestAndSpri
 		Button.Text = "🔑 ยืนยัน KEY"
 	end
 end)
+
 
 
 
