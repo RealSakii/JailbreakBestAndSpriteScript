@@ -34,14 +34,18 @@ frame.Parent = gui
 local corner = Instance.new("UICorner", frame)
 corner.CornerRadius = UDim.new(0, 12)
 
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 40)
-title.BackgroundTransparency = 1
-title.Text = "KEYMO HUB"
-title.TextColor3 = Color3.fromRGB(0,170,255)
-title.Font = Enum.Font.GothamBold
-title.TextScaled = true
-title.Parent = frame
+local TitleImage = Instance.new("ImageLabel")
+TitleImage.Parent = Frame
+TitleImage.Size = UDim2.new(1, 0, 0, 40)
+TitleImage.Position = UDim2.new(0, 0, 0, 0)
+
+-- ใส่ Image ID ของคุณตรงนี้
+TitleImage.Image = "rbxassetid://85807223632250"
+
+TitleImage.BackgroundTransparency = 1
+TitleImage.ScaleType = Enum.ScaleType.Fit
+TitleImage.AnchorPoint = Vector2.new(0.5, 0)
+TitleImage.Position = UDim2.new(0.5, 0, 0, 0)
 
 -- labels
 local labels = {}
@@ -116,3 +120,4 @@ UserInputService.InputBegan:Connect(function(input, gp)
 end)
 
 ----
+
