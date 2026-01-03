@@ -1,5 +1,5 @@
 -- 🔑 KEY ที่ถูกต้อง
-local CorrectKey = "TANKEYMO"
+local CorrectKey = "tankeymo"
 
 -- กันรันซ้ำ
 if getgenv().KeyPassed then return end
@@ -96,37 +96,194 @@ UserInputService.InputBegan:Connect(function(input, gp)
 end)
 
 --Speed
+-- SERVICES
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local Mouse = Player:GetMouse()
 
-  local walkspeedplayer = game:GetService("Players").LocalPlayer
-    local walkspeedmouse = walkspeedplayer:GetMouse()
- 
-    local walkspeedenabled = false
- 
-    function x_walkspeed(key)
-        if (key == "x") then
-            if walkspeedenabled == false then
-                _G.WS = 150;
-                local Humanoid = game:GetService("Players").LocalPlayer.Character.Humanoid;
-                Humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-                Humanoid.WalkSpeed = _G.WS;
-                end)
-                Humanoid.WalkSpeed = _G.WS;
- 
-                walkspeedenabled = true
-            elseif walkspeedenabled == true then
-                _G.WS = 20;
-                local Humanoid = game:GetService("Players").LocalPlayer.Character.Humanoid;
-                Humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-                Humanoid.WalkSpeed = _G.WS;
-                end)
-                Humanoid.WalkSpeed = _G.WS;
- 
-                walkspeedenabled = false
-            end
+-- VARIABLES
+local Humanoid
+local enabled = false
+_G.WS = 20
+
+-- CHARACTER LOAD / RESPAWN
+local function SetupCharacter(char)
+    Humanoid = char:WaitForChild("Humanoid")
+
+    -- ANTI RESET SPEED
+    Humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+        if enabled and Humanoid.WalkSpeed ~= _G.WS then
+            Humanoid.WalkSpeed = _G.WS
+        end
+    end)
+end
+
+if Player.Character then
+    SetupCharacter(Player.Character)
+end
+Player.CharacterAdded:Connect(SetupCharacter)
+
+-- KEY TOGGLE (X)
+Mouse.KeyDown:Connect(function(key)
+    if key:lower() == "x" then
+        enabled = not enabled
+        if enabled then
+            Humanoid.WalkSpeed = _G.WS
+        else
+            Humanoid.WalkSpeed = 20
         end
     end
- 
-    walkspeedmouse.KeyDown:connect(x_walkspeed)
+end)
+
+-- ================= GUI =================
+local gui = Instance.new("ScreenGui")
+gui.Name = "SpeedGUI"
+gui.Parent = game.CoreGui
+gui.Enabled = false
+
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0,260,0,140)
+main.Position = UDim2.new(0.02,0,0.5,-70)
+main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = false
+main.BackgroundTransparency = 0
+
+local corner = Instance.new("UICorner", main)
+corner.CornerRadius = UDim.new(0,12)
+
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1,0,0,35)
+title.Text = "ปรับความเร็วในการวิ่ง"
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.GothamBold
+title.TextSize = 16
+
+-- DRAG BAR (ลาก GUI ได้เฉพาะตรงนี้)
+local dragBar = Instance.new("Frame", main)
+dragBar.Size = UDim2.new(1,0,0,35)
+dragBar.BackgroundTransparency = 1
+dragBar.Active = true
+dragBar.Selectable = true
+
+local valueLabel = Instance.new("TextLabel", main)
+valueLabel.Position = UDim2.new(0,0,0,40)
+valueLabel.Size = UDim2.new(1,0,0,25)
+valueLabel.Text = "ความเร็ว : 20"
+valueLabel.TextColor3 = Color3.fromRGB(200,200,200)
+valueLabel.BackgroundTransparency = 1
+valueLabel.Font = Enum.Font.GothamBold
+valueLabel.TextSize = 14
+
+-- SLIDER BAR
+local bar = Instance.new("Frame", main)
+bar.Position = UDim2.new(0,20,0,75)
+bar.Size = UDim2.new(1,-40,0,8)
+bar.BackgroundColor3 = Color3.fromRGB(60,60,60)
+bar.BorderSizePixel = 0
+
+local barCorner = Instance.new("UICorner", bar)
+barCorner.CornerRadius = UDim.new(1,0)
+
+local fill = Instance.new("Frame", bar)
+fill.Size = UDim2.new(0,0,1,0)
+fill.BackgroundColor3 = Color3.fromRGB(0,170,255)
+fill.BorderSizePixel = 0
+
+local fillCorner = Instance.new("UICorner", fill)
+fillCorner.CornerRadius = UDim.new(1,0)
+
+-- SLIDER BUTTON
+local knob = Instance.new("Frame", bar)
+knob.Size = UDim2.new(0,16,0,16)
+knob.Position = UDim2.new(0,-8,0.5,-8)
+knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+knob.BorderSizePixel = 0
+
+local knobCorner = Instance.new("UICorner", knob)
+knobCorner.CornerRadius = UDim.new(1,0)
+
+-- SLIDER LOGIC
+local UserInputService = game:GetService("UserInputService")
+local dragging = false
+local minSpeed, maxSpeed = 10, 300
+
+local function UpdateSlider(x)
+    local size = math.clamp((x - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+    fill.Size = UDim2.new(size,0,1,0)
+    knob.Position = UDim2.new(size,-8,0.5,-8)
+
+    local speed = math.floor(minSpeed + (maxSpeed - minSpeed) * size)
+    _G.WS = speed
+    valueLabel.Text = "ความเร็ว : "..speed
+
+    if enabled and Humanoid then
+        Humanoid.WalkSpeed = _G.WS
+    end
+end
+
+knob.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        UpdateSlider(input.Position.X)
+    end
+end)
+
+local UIS = game:GetService("UserInputService")
+
+local dragging, dragStart, startPos
+
+dragBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        main.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- TOGGLE GUI (X)
+local UIS = game:GetService("UserInputService")
+local guiVisible = false
+
+UIS.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.X then
+        guiVisible = not guiVisible
+        gui.Enabled = guiVisible
+    end
+end)
+
 
 
 --teleport
@@ -168,7 +325,7 @@ local Mouse = LocalPlayer:GetMouse()
 -- SETTINGS
 local AIM_KEY = Enum.UserInputType.MouseButton2
 local FOV_RADIUS = 500
-local MAX_DISTANCE = 500
+local MAX_DISTANCE = 850
 local SMOOTHNESS = 1.5
 local AIM_PART = "HumanoidRootPart"
 
@@ -458,6 +615,7 @@ end)
 		Button.Text = "🔑 ยืนยัน KEY"
 	end
 end)
+
 
 
 
