@@ -35,26 +35,6 @@ frame.Parent = gui
 local corner = Instance.new("UICorner", frame)
 corner.CornerRadius = UDim.new(0, 12)
 
--- สร้าง ScreenGui
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "KEYMOHUB_GUI"
-ScreenGui.Parent = game:GetService("CoreGui")
-
--- สร้าง Frame
-local Frame = Instance.new("Frame")
-Frame.Parent = ScreenGui
-Frame.Size = UDim2.new(0, 350, 0, 250)
-Frame.Position = UDim2.new(0.5, -175, 0.5, -100)
-Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-Frame.BorderSizePixel = 0
-Frame.ZIndex = 1
-
--- มุมโค้ง
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 12)
-UICorner.Parent = Frame
-
--- 🔵 โลโก้ KEYMOHUB (ImageLabel)
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 40)
 title.BackgroundTransparency = 1
@@ -63,6 +43,7 @@ title.TextColor3 = Color3.fromRGB(0,170,255)
 title.Font = Enum.Font.GothamBold
 title.TextScaled = true
 title.Parent = frame
+
 -- labels
 local labels = {}
 
@@ -153,6 +134,7 @@ if not getgenv().DisableNotification then
 		Callback = function() end
 	})
 end
+
 
 
 
