@@ -486,7 +486,6 @@ end)
 
 --ESP PLAYERS
 --// ESP Box + Tracer + Name + Toggle (LocalScript)
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -602,6 +601,7 @@ Players.PlayerRemoving:Connect(RemoveESP)
 
 
 
+
 -------------------------------------------------------------------------
 
 
@@ -629,6 +629,7 @@ if not getgenv().DisableNotification then
 		Callback = function() end
 	})
 end
+
 
 
 
